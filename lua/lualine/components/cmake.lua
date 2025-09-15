@@ -17,12 +17,22 @@ local function resolve(opt)
     end
 end
 
-local default_options = {}
+local default_options = {
+    part_separator = " | ",
+    label = "",
+    format_string = "",
+    not_available_text = "<not set>",
+}
+
+local opt = {}
 
 function M:init(options)
     M.super.init(self, options)
     self.options = vim.tbl_deep_extend("keep", self.options or {}, default_options)
-    default_options.separator = resolve(self.options.cmake_separator) or "|"
+    opt.part_separator = resolve(self.options.part_separator) or default_options.part_separator
+    opt.label = resolve(self.options.label) or default_options.label
+    opt.format_string = resolve(self.options.format_string) or default_options.format_string
+    opt.not_available_text = resolve(self.options.not_available_text) or default_options.not_available_text
 end
 
 function M:update_status()
@@ -30,26 +40,29 @@ function M:update_status()
         return ""
     end
 
-    local status = ""
-    local separator = ""
-
-    local build_type = cmake.get_build_type()
-    local has_build_type = build_type ~= nil and build_type ~= ""
-
-    if has_build_type then
-        status = string.format("%s%s", status, build_type)
-    end
+    local parts = {}
 
     local build_target = cmake.get_build_target()
-    local has_build_target = build_target ~= nil and build_target ~= ""
-
-    if has_build_target then
-        if has_build_type then
-            separator = default_options.separator
-        end
-        status = string.format("%s%s%s", status, separator, build_target)
+    if build_target == nil or build_target == "" then
+        table.insert(parts, opt.not_available_text)
+    else
+        table.insert(parts, build_target)
     end
-    return status
+
+    local build_type = cmake.get_build_type()
+    if build_type ~= nil and build_type ~= "" then
+        table.insert(parts, build_type)
+    end
+
+    local text = opt.label
+    for i, part in ipairs(parts) do
+        if i > 1 then
+            text = string.format("%s%s", text, opt.part_separator)
+        end
+        text = string.format("%s%s", text, part)
+    end
+
+    return text
 end
 
 return M
