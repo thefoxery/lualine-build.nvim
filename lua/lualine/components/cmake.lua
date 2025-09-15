@@ -40,29 +40,77 @@ function M:update_status()
         return ""
     end
 
-    local parts = {}
+    if opt.format_string then
+        local tokens = {}
 
-    local build_target = cmake.get_build_target()
-    if build_target == nil or build_target == "" then
-        table.insert(parts, opt.not_available_text)
-    else
-        table.insert(parts, build_target)
-    end
-
-    local build_type = cmake.get_build_type()
-    if build_type ~= nil and build_type ~= "" then
-        table.insert(parts, build_type)
-    end
-
-    local text = opt.label
-    for i, part in ipairs(parts) do
-        if i > 1 then
-            text = string.format("%s%s", text, opt.part_separator)
+        local split_parts = vim.split(opt.format_string, "|")
+        for _, part in ipairs(split_parts) do
+            part = vim.trim(part)
+            if part ~= "" then
+                table.insert(tokens, part)
+            end
         end
-        text = string.format("%s%s", text, part)
-    end
 
-    return text
+        local token_map = {
+            ["${BUILD_TARGET}"] = cmake.get_build_target,
+            ["${BUILD_TYPE}"] = cmake.get_build_type,
+        }
+
+        local parts = {}
+        for _, token in ipairs(tokens) do
+            if token_map[token] == nil then
+                if opt.not_available_text ~= nil or opt.not_available_text == "" then
+                    table.insert(parts, opt.not_available_text)
+                end
+            else
+                local getter = token_map[token]
+                local value = getter()
+                if value == nil or value == "" then
+                    if opt.not_available_text ~= nil and opt.not_available_text ~= "" then
+                        value = opt.not_available_text
+                    end
+                end
+
+                if value ~= "" then
+                    table.insert(parts, value)
+                end
+            end
+        end
+
+        local text = opt.label
+        for i, section in ipairs(parts) do
+            if i > 1 then
+                text = string.format("%s%s", text, opt.part_separator)
+            end
+            text = string.format("%s%s", text, section)
+        end
+
+        return text
+    else
+        local parts = {}
+
+        local build_target = cmake.get_build_target()
+        if build_target == nil or build_target == "" then
+            table.insert(parts, opt.not_available_text)
+        else
+            table.insert(parts, build_target)
+        end
+
+        local build_type = cmake.get_build_type()
+        if build_type ~= nil and build_type ~= "" then
+            table.insert(parts, build_type)
+        end
+
+        local text = opt.label
+        for i, part in ipairs(parts) do
+            if i > 1 then
+                text = string.format("%s%s", text, opt.part_separator)
+            end
+            text = string.format("%s%s", text, part)
+        end
+
+        return text
+    end
 end
 
 return M
