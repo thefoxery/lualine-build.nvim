@@ -18,7 +18,7 @@ local function resolve(opt)
 end
 
 local default_options = {
-    format_string = "CMake Target: ${BUILD_TARGET} [${BUILD_TYPE}]",
+    format_string = "Project: ${BUILD_TARGET} [${BUILD_TYPE}]",
     not_selected_text = "<not selected>",
 }
 
