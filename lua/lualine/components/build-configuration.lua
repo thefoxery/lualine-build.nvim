@@ -37,17 +37,22 @@ function M:update_status()
         return ""
     end
 
-    if self.opts.format_string then
+    local format_string = resolve(self.opts.format_string) or default_opts.format_string
+    if format_string then
         local token_map = {
             ["BUILD_TARGET"] = provider.get_build_target,
             ["BUILD_TYPE"] = provider.get_build_type,
         }
 
-        local text = self.opts.format_string
+        local text = format_string
+        if text == nil then
+            return ""
+        end
+
         for token, getter in pairs(token_map) do
             local value = getter()
             if value == "" then
-                value = self.opts.not_selected_text
+                value = resolve(self.opts.not_selected_text) or resolve(default_opts.not_selected_text)
             end
             text = text:gsub("${" .. token .. "}", value)
         end
