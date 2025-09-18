@@ -12,13 +12,19 @@ local function resolve(opt)
     end
 end
 
--- TODO: consider a default value. i.e. "n/a" or "provider_not_set"
 local dummy_provider = function() return "" end
 
 local default_opts = {
-    format_string = "Project: ${BUILD_TARGET} [${BUILD_TYPE}]",
-    not_selected_text = "<not selected>",
+    format_string = "${PROVIDER_NAME} Target: ${BUILD_TARGET} [${BUILD_TYPE}]",
+    not_selected_text = "",
+    default_missing_value_text = "",
+    missing_value_texts = {
+        ["PROVIDER_NAME"] = "Unknown",
+        ["BUILD_TARGET"] = "<no target>",
+        ["BUILD_TYPE"] = "<no config>",
+    },
     provider = {
+        get_provider_name = dummy_provider,
         get_build_target = dummy_provider,
         get_build_type = dummy_provider,
     },
@@ -32,7 +38,6 @@ end
 
 function M:update_status()
     local provider = resolve(self.opts.provider)
-
     if provider == nil or not provider.is_project_directory() then
         return ""
     end
@@ -40,21 +45,20 @@ function M:update_status()
     local format_string = resolve(self.opts.format_string) or default_opts.format_string
     if format_string then
         local token_map = {
-            ["BUILD_TARGET"] = provider.get_build_target,
-            ["BUILD_TYPE"] = provider.get_build_type,
+            ["PROVIDER_NAME"] = resolve(provider.get_provider_name) or "",
+            ["BUILD_TARGET"] = resolve(provider.get_build_target) or "",
+            ["BUILD_TYPE"] = resolve(provider.get_build_type) or "",
         }
 
         local text = format_string
-        if text == nil then
-            return ""
-        end
 
-        for token, getter in pairs(token_map) do
-            local value = getter()
+        for token, value in pairs(token_map) do
             if value == "" then
-                value = resolve(self.opts.not_selected_text) or resolve(default_opts.not_selected_text)
+                value = resolve(self.opts.missing_value_texts[token]) or default_opts.missing_value_texts[token] or default_opts.default_missing_value_text
             end
-            text = text:gsub("${" .. token .. "}", value)
+            if value ~= nil then
+                text = text:gsub("${" .. token .. "}", value)
+            end
         end
 
         return text
