@@ -21,7 +21,6 @@ end
 local dummy_provider = function() return "" end
 
 local default_opts = {
-    label = "",
     format_string = "${PROVIDER_NAME} Target: ${BUILD_TARGET} [${BUILD_TYPE}]",
     default_missing_value_text = "",
     missing_value_texts = {
@@ -71,8 +70,7 @@ function M:update_status()
             ["BUILD_TYPE"] = resolve(provider.get_build_type) or "",
         }
 
-        local label = resolve(self.opts.label) or default_opts.label
-        local text = string.format("%s%s", label, format_string)
+        local text = string.format("%s", format_string)
 
         for token, value in pairs(token_map) do
             if value == "" then
@@ -88,7 +86,7 @@ function M:update_status()
 end
 
 function M:apply_icon()
-    if not self.opts.icon.enabled then
+    if self.options.icons_enabled or self.opts.icon.enabled then
         return
     end
 
