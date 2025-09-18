@@ -24,7 +24,7 @@ local default_opts = {
         ["BUILD_TYPE"] = "<no config>",
     },
     provider = {
-        get_provider_name = dummy_provider,
+        get_build_system_type = dummy_provider,
         get_build_target = dummy_provider,
         get_build_type = dummy_provider,
     },
@@ -45,7 +45,7 @@ function M:update_status()
     local format_string = resolve(self.opts.format_string) or default_opts.format_string
     if format_string then
         local token_map = {
-            ["PROVIDER_NAME"] = resolve(provider.get_provider_name) or "",
+            ["PROVIDER_NAME"] = resolve(provider.get_build_system_type) or "",
             ["BUILD_TARGET"] = resolve(provider.get_build_target) or "",
             ["BUILD_TYPE"] = resolve(provider.get_build_type) or "",
         }
