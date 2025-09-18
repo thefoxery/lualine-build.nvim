@@ -21,7 +21,7 @@ end
 local dummy_provider = function() return "" end
 
 local default_opts = {
-    format_string = "${PROVIDER_NAME} Target: ${BUILD_TARGET} [${BUILD_TYPE}]",
+    format_string = "Target: ${BUILD_TARGET} [${BUILD_TYPE}]",
     default_missing_value_text = "",
     missing_value_texts = {
         ["PROVIDER_NAME"] = "Unknown",
