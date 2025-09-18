@@ -35,9 +35,8 @@ local default_opts = {
     },
     icon = {
         enabled = false,
-        f_name = "CMakeLists.txt",
-        f_extension = "txt",
-        colored = false,
+        f_name = ".clang-tidy",
+        f_extension = "",
     },
 }
 
@@ -85,26 +84,32 @@ function M:update_status()
     end
 end
 
-function M:apply_icon()
-    if self.options.icons_enabled or self.opts.icon.enabled then
-        return
-    end
-
-    local icon
-
+local function get_icon(f_name, f_extension)
     local ok, devicons = pcall(require, "nvim-web-devicons")
     if ok then
-        icon, _ = devicons.get_icon(
-            self.opts.icon.f_name,
-            self.opts.icon.f_extension
+        local icon, _ = devicons.get_icon(
+            f_name,
+            f_extension
         )
+        if icon then
+            return icon
+        end
     end
+end
 
-    if not icon then
-        return
+function M:apply_icon()
+    if self.options.icons_enabled or self.opts.icon.enabled then
+        local icon = get_icon(
+            self.opts.icon.f_name,
+            self.opts.icon_f_extension
+        )
+
+        if not icon then
+            return
+        end
+
+        self.status = string.format("%s %s", icon, self.status)
     end
-
-    self.status = string.format("%s %s", icon, self.status)
 end
 
 return M
